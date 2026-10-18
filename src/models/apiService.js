@@ -1,10 +1,12 @@
 import { formatPhone, over } from "./domainRules";
 
-export const APP_ID = import.meta.env?.VITE_APP_ID;
-export const BASE_URL = import.meta.env?.VITE_BASE_URL;
-const USERNAME = import.meta.env?.VITE_USERNAME || "test-client";
-const PASSWORD = import.meta.env?.VITE_PASSWORD || "test-client";
-const DID_NUMBER = import.meta.env?.VITE_DID || "+8809678771744";
+export const BASE_URL =
+  import.meta.env?.VITE_BASE_URL || "https://api.aidose.co";
+export const APP_ID =
+  import.meta.env?.VITE_APP_ID || "703d817f-9778-464d-9ada-bb2a2fa67600";
+export const DID_NUMBER = import.meta.env?.VITE_DID || "8809678771744";
+export const USERNAME = import.meta.env?.VITE_USERNAME || "test-client";
+export const PASSWORD = import.meta.env?.VITE_PASSWORD || "test-client";
 
 const getBasicAuthCredentials = () => btoa(`${USERNAME}:${PASSWORD}`);
 
@@ -251,7 +253,7 @@ export async function assignSipVoiceAi(config) {
 
   const payload = {
     app_id: config.appId || APP_ID,
-    sipNumber: String(config.callerNumber || "+8809678770134").trim(),
+    sipNumber: String(config.callerNumber || DID_NUMBER).trim(),
     aiModels: {
       voice: {
         pipelineType: config.pipelineType || "multimodal_live",

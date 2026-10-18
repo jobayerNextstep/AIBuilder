@@ -1,7 +1,7 @@
 // src/views/SettingsView.jsx
 import { useState } from "react";
 import { useAppState } from "../models/StateContext";
-import { assignSipVoiceAi } from "../models/apiService"; // <-- ✅ ইমপোর্ট করুন
+import { assignSipVoiceAi, DID_NUMBER } from "../models/apiService";
 import {
   GEMINI_LANGUAGE_CODES,
   GEMINI_MODELS,
@@ -23,14 +23,12 @@ export const SettingsView = () => {
 
   const [localName, setLocalName] = useState(name);
   const [localAi, setLocalAi] = useState(aiConfig);
-  const [assigning, setAssigning] = useState(false); // লোডিং স্টেট
-
+  const [assigning, setAssigning] = useState(false);
   const handleSaveProfile = () => {
     setName(localName.trim() || name);
     toast("Profile name saved");
   };
 
-  // ✅ ডেডিকেটেড এন্ডপয়েন্টে অ্যাসাইন রিকোয়েস্ট পাঠানো
   const handleAssignVoiceAi = async () => {
     if (!localAi.callerNumber) {
       return toast("Please enter a valid SIP / DID number!");
@@ -38,7 +36,6 @@ export const SettingsView = () => {
 
     setAssigning(true);
     try {
-      // ১. আসল API-তে কল পাঠানো
       await assignSipVoiceAi({
         callerNumber: localAi.callerNumber,
         model: localAi.model,
@@ -47,9 +44,10 @@ export const SettingsView = () => {
         pipelineType: "multimodal_live",
       });
 
-      // ২. লোকাল স্টেট ও লোকালস্টোরেজ আপডেট করা
       updateAiConfig(localAi);
-      toast(`SIP ${localAi.callerNumber} assigned to ${localAi.voiceName} successfully!`);
+      toast(
+        `SIP ${localAi.callerNumber} assigned to ${localAi.voiceName} successfully!`,
+      );
     } catch (err) {
       console.error("Assign error:", err);
       toast("Failed to assign SIP Voice AI: " + err.message);
@@ -59,7 +57,7 @@ export const SettingsView = () => {
   };
 
   const selectedVoiceObj = GEMINI_VOICES.find(
-    (v) => v.value === localAi.voiceName
+    (v) => v.value === localAi.voiceName,
   );
 
   return (
@@ -68,10 +66,10 @@ export const SettingsView = () => {
         <h1 className="grow">Settings</h1>
       </div>
       <p className="sub" style={{ marginTop: 0 }}>
-        Manage your profile, Gemini Multimodal Live voice engine, and market compliance rules.
+        Manage your profile, Gemini Multimodal Live voice engine, and market
+        compliance rules.
       </p>
 
-      {/* ১. প্রোফাইল কার্ড */}
       <section className="card pad" style={{ marginTop: "16px" }}>
         <h2>Your Profile</h2>
         <label className="mu">
@@ -82,7 +80,10 @@ export const SettingsView = () => {
             style={{ marginTop: "6px" }}
           />
         </label>
-        <div className="mb" style={{ justifyContent: "flex-start", marginTop: "14px" }}>
+        <div
+          className="mb"
+          style={{ justifyContent: "flex-start", marginTop: "14px" }}
+        >
           <button className="btn sm" onClick={handleSaveProfile}>
             Save Profile
           </button>
@@ -101,7 +102,8 @@ export const SettingsView = () => {
         </div>
 
         <p className="sub" style={{ margin: "2px 0 16px" }}>
-          Assign the Google Gemini Voice model, speaker tone, language, and SIP DID line to this application.
+          Assign the Google Gemini Voice model, speaker tone, language, and SIP
+          DID line to this application.
         </p>
 
         {/* Inputs Grid */}
@@ -110,7 +112,9 @@ export const SettingsView = () => {
             Voice Model
             <select
               value={localAi.model}
-              onChange={(e) => setLocalAi({ ...localAi, model: e.target.value })}
+              onChange={(e) =>
+                setLocalAi({ ...localAi, model: e.target.value })
+              }
               style={{ marginTop: "6px" }}
             >
               {GEMINI_MODELS.map((m) => (
@@ -173,7 +177,7 @@ export const SettingsView = () => {
               onChange={(e) =>
                 setLocalAi({ ...localAi, callerNumber: e.target.value })
               }
-              placeholder="e.g. +8809678770134"
+              placeholder={`e.g. ${DID_NUMBER}`}
               style={{ marginTop: "6px" }}
             />
           </label>
@@ -190,12 +194,18 @@ export const SettingsView = () => {
             fontSize: "12.5px",
           }}
         >
-          <span style={{ color: "var(--pr)", fontWeight: 600 }}>Active Voice Tone: </span>
-          <b>{selectedVoiceObj?.label || localAi.voiceName}</b> · Direct WebRTC Full Duplex Audio Loop
+          <span style={{ color: "var(--pr)", fontWeight: 600 }}>
+            Active Voice Tone:{" "}
+          </span>
+          <b>{selectedVoiceObj?.label || localAi.voiceName}</b> · Direct WebRTC
+          Full Duplex Audio Loop
         </div>
 
         {/* Assign Button */}
-        <div className="mb" style={{ justifyContent: "flex-start", marginTop: "16px" }}>
+        <div
+          className="mb"
+          style={{ justifyContent: "flex-start", marginTop: "16px" }}
+        >
           <button
             className="btn sm"
             onClick={handleAssignVoiceAi}
@@ -210,11 +220,16 @@ export const SettingsView = () => {
       <section className="card pad" style={{ marginTop: "16px" }}>
         <h2>Markets</h2>
         <p className="sub" style={{ marginTop: 0 }}>
-          A market holds the language, calling hours, and debt collection limits the AI must obey.
+          A market holds the language, calling hours, and debt collection limits
+          the AI must obey.
         </p>
 
         {packs.map((p) => (
-          <div className="row" key={p.id} style={{ padding: "10px 0", flexWrap: "wrap" }}>
+          <div
+            className="row"
+            key={p.id}
+            style={{ padding: "10px 0", flexWrap: "wrap" }}
+          >
             <div className="grow">
               <b>{p.name}</b>
               <small>
@@ -246,15 +261,21 @@ export const SettingsView = () => {
                 <summary>See rules</summary>
                 <div className="kv">
                   <span>Disclosure</span>
-                  <b style={{ fontWeight: 500, textAlign: "right" }}>{p.disclosure}</b>
+                  <b style={{ fontWeight: 500, textAlign: "right" }}>
+                    {p.disclosure}
+                  </b>
                 </div>
                 <div className="kv">
                   <span>Never allowed</span>
-                  <b style={{ fontWeight: 500, textAlign: "right" }}>{p.banned.join(", ")}</b>
+                  <b style={{ fontWeight: 500, textAlign: "right" }}>
+                    {p.banned.join(", ")}
+                  </b>
                 </div>
                 <div className="kv">
                   <span>Smallest payment</span>
-                  <b style={{ fontWeight: 500 }}>{p.limits.minPartialPct}% of an installment</b>
+                  <b style={{ fontWeight: 500 }}>
+                    {p.limits.minPartialPct}% of an installment
+                  </b>
                 </div>
               </details>
             )}
@@ -267,7 +288,12 @@ export const SettingsView = () => {
         <h2>Connection</h2>
         <div className="kv">
           <span>Backend Server</span>
-          <b style={{ fontWeight: 500, color: isConnected ? "var(--ok)" : "var(--wn)" }}>
+          <b
+            style={{
+              fontWeight: 500,
+              color: isConnected ? "var(--ok)" : "var(--wn)",
+            }}
+          >
             {isConnected ? "Connected (Live MongoDB API)" : "Disconnected"}
           </b>
         </div>

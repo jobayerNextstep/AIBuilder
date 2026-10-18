@@ -1,7 +1,7 @@
-// src/controllers/useAppController.js
 import { useAppState } from "../models/StateContext";
 import {
   createSipCampaign,
+  DID_NUMBER,
   markCallReviewDone,
   requestSipCall,
   toggleSipCampaignStatus,
@@ -217,7 +217,7 @@ export function useAppController() {
 
     const campaignPayload = {
       campaignName: form.cname || "Lendline Loan Overdue Recovery Campaign",
-      callerNumber: "8809678770134",
+      callerNumber: DID_NUMBER,
       retryNextDay: true,
       doubleTry: false,
       instructionType: "conversation",
@@ -349,7 +349,10 @@ export function useAppController() {
           ...prev,
           funnel: {
             ...prev.funnel,
-            paid: status === "kept" ? (prev.funnel?.paid || 0) + 1 : (prev.funnel?.paid || 0),
+            paid:
+              status === "kept"
+                ? (prev.funnel?.paid || 0) + 1
+                : prev.funnel?.paid || 0,
           },
         };
       });

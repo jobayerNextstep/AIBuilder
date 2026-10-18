@@ -1,6 +1,7 @@
 // src/models/StateContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 import {
+  DID_NUMBER,
   fetchLendlineDashboardData,
   groupCallsIntoCampaigns,
 } from "./apiService";
@@ -122,10 +123,23 @@ export const StateProvider = ({ children }) => {
 
   const [aiConfig, setAiConfig] = useState(() => {
     const saved = localStorage.getItem("lendline_ai_config");
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+
+        if (parsed.callerNumber === "8809678770134" || !parsed.callerNumber) {
+          parsed.callerNumber = DID_NUMBER;
+          localStorage.setItem("lendline_ai_config", JSON.stringify(parsed));
+        }
+        return parsed;
+      } catch {}
+    }
+
     return saved
       ? JSON.parse(saved)
       : {
-          callerNumber: "8809678770134",
+          callerNumber: DID_NUMBER,
           model: "models/gemini-3.8-live",
           languageCode: "bn-BD",
           voiceName: "Zubenelgenubi",
