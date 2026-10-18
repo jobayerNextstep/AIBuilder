@@ -56,8 +56,8 @@ export function useAppController() {
       id: "live_" + (Date.now() + idx),
       callId: "live_" + (Date.now() + idx),
       b: { ...b },
-      status: "live",
-      startedAt: now,
+      status: "dialing",
+      startedAt: null,
       transcript: [
         {
           role: "agent",

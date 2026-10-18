@@ -46,7 +46,7 @@ export function groupCallsIntoCampaigns(calls = []) {
           c.campaignName ||
           (b.product
             ? `${b.product} Recovery Campaign`
-            : "Lendline Loan Overdue Recovery Campaign"),
+            : "goBank Loan Overdue Recovery Campaign"),
         status: "completed",
         createdAt: c.createdAt || c.startedAt || new Date().toISOString(),
         pack: b.pack || "bd",
@@ -138,7 +138,7 @@ export async function requestSipCall(borrowers) {
   }));
 
   const payload = {
-    campaignName: "Lendline Loan Overdue Recovery Campaign",
+    campaignName: "goBank Loan Overdue Recovery Campaign",
     callerNumber: DID_NUMBER,
     retryNextDay: true,
     doubleTry: false,
@@ -148,7 +148,7 @@ export async function requestSipCall(borrowers) {
     stopTime: null,
     callStartDate: null,
     callEndDate: null,
-    instructionDetails: `You are 'Lendline AI' calling regarding overdue loan installments. State recording disclosure, verify identity, explain amount due, negotiate within policy limits (max 30 days, min 50% partial), and teach-back confirm.`,
+    instructionDetails: `You are 'goBank AI' calling regarding overdue loan installments. State recording disclosure, verify identity, explain amount due, negotiate within policy limits (max 30 days, min 50% partial), and teach-back confirm.`,
     recipients,
   };
 

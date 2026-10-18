@@ -164,7 +164,7 @@ export const DashboardView = ({ onCall, onCallMultiple, onOpenCall, onDoneItem }
         </div>
 
         <div className="card kc2">
-          <small>Human handoffs</small>
+          <small>Human handoffs Request</small>
           <b>{fmt(stats.humanHandoffs)}</b>
           <div className="dl"><span className="pl r">▲ 0%</span> <span className="mu">vs previous 7 days</span></div>
           {renderSparkline([0, 0, 0, 0, 0, 0, 0])}

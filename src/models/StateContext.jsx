@@ -5,6 +5,7 @@ import {
   groupCallsIntoCampaigns,
 } from "./apiService";
 import { F0 } from "./constants";
+import { socket } from "./socketService";
 
 const StateContext = createContext();
 
@@ -12,8 +13,8 @@ export const StateProvider = ({ children }) => {
   const [bs, setBs] = useState([
     {
       id: "d1",
-      name: "Jahanara Khatun",
-      phone: "+8801714121645",
+      name: "Jubayer Ahamed",
+      phone: "+8801713454223",
       pack: "bd",
       amountDue: 6500,
       dueDate: "2026-10-01",
@@ -32,8 +33,8 @@ export const StateProvider = ({ children }) => {
     },
     {
       id: "d3",
-      name: "Rafiqul Biswas",
-      phone: "+880 1714 121645",
+      name: "Aidose",
+      phone: "+8801624237479",
       pack: "bd",
       amountDue: 12000,
       dueDate: "2026-09-01",
@@ -41,13 +42,13 @@ export const StateProvider = ({ children }) => {
       product: "Retail Loan",
     },
     {
-      id: "d4",
-      name: "Shamima Akter",
-      phone: "+880 1714 121645",
-      pack: "bd",
-      amountDue: 3500,
-      dueDate: "2026-10-05",
-      loanId: "LN-662910",
+      id: "d5",
+      name: "Maria Santos",
+      phone: "+8801713454223",
+      pack: "b",
+      amountDue: 2500,
+      dueDate: "2026-10-02",
+      loanId: "LN-300118",
       product: "Retail Loan",
     },
   ]);
@@ -57,17 +58,47 @@ export const StateProvider = ({ children }) => {
       id: "bd",
       name: "Bangladesh (BN)",
       lang: "Bangla",
+      language: "Bangla",
       status: "Ready",
       limits: { maxRescheduleDays: 30, minPartialPct: 50 },
       disclosure:
-        "This call is recorded. I am an AI assistant calling on behalf of Lendline.",
+        "This call is recorded. I am an AI assistant calling on behalf of Lendline about your loan installment.",
       banned: [
         "threats",
         "shaming",
         "telling third parties about the debt",
-        "false urgency",
+        "false urgency or pressure",
       ],
       hours: [9, 20],
+    },
+    {
+      id: "b",
+      name: "Market B (illustrative)",
+      lang: "Tagalog/English",
+      language: "Tagalog and English",
+      status: "In Review",
+      limits: { maxRescheduleDays: 10, minPartialPct: 50 },
+      disclosure:
+        "This call is recorded. I am an AI assistant calling for Lendline about your loan payment.",
+      banned: [
+        "threats",
+        "shaming",
+        "telling third parties about the debt",
+        "repeated pressure",
+      ],
+      hours: [8, 19],
+    },
+    {
+      id: "id",
+      name: "Indonesia (ID)",
+      lang: "Bahasa",
+      status: "Draft",
+    },
+    {
+      id: "in",
+      name: "India (IN)",
+      lang: "Hindi",
+      status: "Draft",
     },
   ]);
 
@@ -114,6 +145,98 @@ export const StateProvider = ({ children }) => {
     toast._timer = setTimeout(() => setToastMsg(""), 3000);
   };
 
+  useEffect(() => {
+    socket.on("call_connected", (data) => {
+      console.log("☎️ [Socket] Customer Answered Phone:", data);
+      toast("Customer answered! Call is now LIVE.");
+
+      setCalls((prev) =>
+        prev.map((c) => {
+          if (c.status === "dialing") {
+            return {
+              ...c,
+              callId: String(data.callId || data.handleId),
+              status: "live",
+              startedAt: data.startTime || new Date().toISOString(),
+            };
+          }
+          return c;
+        }),
+      );
+    });
+
+    socket.on("call_ended", (data) => {
+      console.log("📴 [Socket] Customer Disconnected:", data);
+      toast("Customer hung up! Processing transcript...");
+
+      setCalls((prev) =>
+        prev.map((c) => {
+          const isTarget =
+            c.status === "live" ||
+            c.status === "dialing" ||
+            c.callId === String(data.callId || data.handleId);
+
+          if (isTarget) {
+            return {
+              ...c,
+              status: "processing",
+              endedAt: data.endedAt || new Date().toISOString(),
+              durationSeconds: data.durationSeconds || c.durationSeconds,
+            };
+          }
+          return c;
+        }),
+      );
+    });
+
+    socket.on("call_analyzed", (payload) => {
+      console.log("🎉 [Socket] Call Analyzed:", payload);
+      toast("Call analysis & transcript ready!");
+
+      const callId = String(payload.callId);
+      const data = payload.data || {};
+
+      setCalls((prev) => {
+        let matched = false;
+        const updated = prev.map((c) => {
+          if (
+            c.status === "processing" ||
+            c.callId === callId ||
+            c.id === callId
+          ) {
+            matched = true;
+            return {
+              ...c,
+              ...data,
+              id: c.id,
+              callId: callId,
+              status: "completed",
+              b: data.b || data.borrower || c.b,
+              transcript: data.transcript || data.transcripts || [],
+            };
+          }
+          return c;
+        });
+
+        if (!matched && data.callId) {
+          return [
+            { id: data.callId, ...data, status: "completed" },
+            ...updated,
+          ];
+        }
+        return updated;
+      });
+
+      syncWithBackend();
+    });
+
+    return () => {
+      socket.off("call_connected");
+      socket.off("call_ended");
+      socket.off("call_analyzed");
+    };
+  }, []);
+
   const syncWithBackend = async () => {
     const data = await fetchLendlineDashboardData();
     if (data) {
@@ -124,7 +247,7 @@ export const StateProvider = ({ children }) => {
 
       if (Array.isArray(callsList)) {
         setCalls((prev) => {
-          const formattedCalls = callsList.map((c) => ({
+          const formattedBackendCalls = callsList.map((c) => ({
             id: c.callId || c._id,
             callId: c.callId,
             b: c.b || c.borrower,
@@ -141,12 +264,21 @@ export const StateProvider = ({ children }) => {
             paidStatus: c.paidStatus || "pending",
           }));
 
-          const liveLocals = prev.filter((p) => p.status === "live");
-          const existingIds = new Set(liveLocals.map((x) => x.id));
-          const nonDuplicates = formattedCalls.filter(
-            (x) => !existingIds.has(x.id),
+          const activeLocalCalls = prev.filter(
+            (c) =>
+              c.status === "dialing" ||
+              c.status === "live" ||
+              c.status === "processing",
           );
-          return [...liveLocals, ...nonDuplicates];
+
+          const activeIds = new Set(
+            activeLocalCalls.map((x) => x.callId || x.id),
+          );
+          const nonDuplicates = formattedBackendCalls.filter(
+            (x) => !activeIds.has(x.callId) && !activeIds.has(x.id),
+          );
+
+          return [...activeLocalCalls, ...nonDuplicates];
         });
       }
 

@@ -43,7 +43,7 @@ export const Sidebar = () => {
           <i style={{ height: "16px" }} />
           <i style={{ height: "8px" }} />
         </span>
-        Lendline
+        goBank
       </div>
       {nav.map(([k, iconName, label, badge]) => (
         <button

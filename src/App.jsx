@@ -60,16 +60,24 @@ export default function App() {
       <Sidebar />
       <main>
         {/* Top Market Selector */}
-        <div className="top">
-          <label className="mu" htmlFor="mk">
-            Market
-          </label>
-          <select id="mk" value={mkt} onChange={(e) => setMkt(e.target.value)}>
-            {packs.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
+         <div className="top">
+          <label className="mu" htmlFor="mk">Market</label>
+          <select
+            id="mk"
+            value={mkt}
+            onChange={(e) => {
+              setMkt(e.target.value);
+              setSel(null);
+              if (view === "call") setView("calls");
+            }}
+          >
+            {packs
+              .filter((p) => p.status !== "Draft") 
+              .map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
           </select>
         </div>
 
